@@ -15,7 +15,10 @@ pub mod phone_link;
 pub mod validation;
 pub mod ws_protocol;
 
-pub use call_event::{CallDirection, CallEvent, Customer, EnrichedCallEvent, Vehicle};
+pub use call_event::{
+    CallDirection, CallEvent, Customer, EnrichedCallEvent, LastContact, OpenItem, OpenOrder,
+    Vehicle,
+};
 pub use call_note::{CallNote, NoteCategory};
 pub use error::SharedError;
 pub use phone_link::{ContactPerson, LinkSource, PhoneLink};

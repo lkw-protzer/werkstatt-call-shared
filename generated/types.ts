@@ -33,7 +33,15 @@ id: string,
 /**
  * Customer display name.
  */
-name: string, };
+name: string, 
+/**
+ * WERBAS customer number (Kundennummer), if available.
+ */
+customerNumber: string | null, 
+/**
+ * City of the customer's primary address (Ort), if available.
+ */
+city: string | null, };
 
 type Vehicle = { 
 /**
@@ -47,7 +55,57 @@ label: string,
 /**
  * License plate of the vehicle, if known.
  */
-licensePlate: string | null, };
+licensePlate: string | null, 
+/**
+ * Date of the next mandatory vehicle inspection (Hauptuntersuchung/HU).
+ */
+nextHuDate: string | null, 
+/**
+ * Date of the next exhaust emissions test (Abgasuntersuchung/AU).
+ */
+nextAuDate: string | null, };
+
+type OpenOrder = { 
+/**
+ * WERBAS work order identifier.
+ */
+id: string, 
+/**
+ * Human-readable order number shown in WERBAS.
+ */
+orderNumber: string, 
+/**
+ * Short description of the work order, if available.
+ */
+description: string | null, 
+/**
+ * Current status of the order (e.g. `"Offen"`, `"In Arbeit"`, `"Fertig"`).
+ */
+status: string, };
+
+type OpenItem = { 
+/**
+ * WERBAS invoice or document identifier.
+ */
+id: string, 
+/**
+ * Outstanding amount in EUR (positive = customer owes the workshop).
+ */
+amountEur: number, 
+/**
+ * Short label (e.g. invoice number or description).
+ */
+label: string | null, };
+
+type LastContact = { 
+/**
+ * UTC timestamp of the last contact.
+ */
+date: string, 
+/**
+ * Human-readable contact type (e.g. `"Anruf"`, `"E-Mail"`, `"Termin"`).
+ */
+contactType: string, };
 
 type EnrichedCallEvent = { 
 /**
@@ -63,17 +121,29 @@ customer: Customer | null,
  */
 vehicles: Array<Vehicle>, 
 /**
- * Open work-order identifier in WERBAS, if any.
+ * Open work orders in WERBAS for the matched customer.
  */
-openOrder: string | null, 
+openOrders: Array<OpenOrder>, 
 /**
- * UTC timestamp of the last contact with this customer, if known.
+ * Structured last contact record for this customer, if known.
  */
-lastContact: string | null, 
+lastContact: LastContact | null, 
 /**
- * Whether the customer has unresolved open orders.
+ * Open financial items (Offene Posten) for the matched customer.
  */
-unresolved: boolean, };
+openItems: Array<OpenItem>, 
+/**
+ * Whether the customer has unresolved open orders (legacy flag).
+ */
+unresolved: boolean, 
+/**
+ * WERBAS deep-link URL for this customer, constructed by the server.
+ *
+ * `None` until the server has a WERBAS base URL configured
+ * (see issue #9 / werkstatt-call-server settings). The client falls back
+ * to a placeholder when `None`.
+ */
+werbasUrl: string | null, };
 
 type NoteCategory = "Termin" | "Panne" | "Reklamation" | "Angebot" | "Sonstiges";
 

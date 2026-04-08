@@ -51,6 +51,12 @@ pub struct Customer {
 
     /// Customer display name.
     pub name: String,
+
+    /// WERBAS customer number (Kundennummer), if available.
+    pub customer_number: Option<String>,
+
+    /// City of the customer's primary address (Ort), if available.
+    pub city: Option<String>,
 }
 
 /// A vehicle from WERBAS associated with a customer.
@@ -65,6 +71,54 @@ pub struct Vehicle {
 
     /// License plate of the vehicle, if known.
     pub license_plate: Option<String>,
+
+    /// Date of the next mandatory vehicle inspection (Hauptuntersuchung/HU).
+    pub next_hu_date: Option<DateTime<Utc>>,
+
+    /// Date of the next exhaust emissions test (Abgasuntersuchung/AU).
+    pub next_au_date: Option<DateTime<Utc>>,
+}
+
+/// An open work order in WERBAS (Offener Auftrag).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenOrder {
+    /// WERBAS work order identifier.
+    pub id: String,
+
+    /// Human-readable order number shown in WERBAS.
+    pub order_number: String,
+
+    /// Short description of the work order, if available.
+    pub description: Option<String>,
+
+    /// Current status of the order (e.g. `"Offen"`, `"In Arbeit"`, `"Fertig"`).
+    pub status: String,
+}
+
+/// An open financial item (Offener Posten) associated with a customer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenItem {
+    /// WERBAS invoice or document identifier.
+    pub id: String,
+
+    /// Outstanding amount in EUR (positive = customer owes the workshop).
+    pub amount_eur: f64,
+
+    /// Short label (e.g. invoice number or description).
+    pub label: Option<String>,
+}
+
+/// Last contact record for a customer (Letzter Kontakt).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct LastContact {
+    /// UTC timestamp of the last contact.
+    pub date: DateTime<Utc>,
+
+    /// Human-readable contact type (e.g. `"Anruf"`, `"E-Mail"`, `"Termin"`).
+    pub contact_type: String,
 }
 
 /// A call event enriched with WERBAS customer and vehicle data.
@@ -83,15 +137,27 @@ pub struct EnrichedCallEvent {
     #[garde(skip)]
     pub vehicles: Vec<Vehicle>,
 
-    /// Open work-order identifier in WERBAS, if any.
+    /// Open work orders in WERBAS for the matched customer.
     #[garde(skip)]
-    pub open_order: Option<String>,
+    pub open_orders: Vec<OpenOrder>,
 
-    /// UTC timestamp of the last contact with this customer, if known.
+    /// Structured last contact record for this customer, if known.
     #[garde(skip)]
-    pub last_contact: Option<DateTime<Utc>>,
+    pub last_contact: Option<LastContact>,
 
-    /// Whether the customer has unresolved open orders.
+    /// Open financial items (Offene Posten) for the matched customer.
+    #[garde(skip)]
+    pub open_items: Vec<OpenItem>,
+
+    /// Whether the customer has unresolved open orders (legacy flag).
     #[garde(skip)]
     pub unresolved: bool,
+
+    /// WERBAS deep-link URL for this customer, constructed by the server.
+    ///
+    /// `None` until the server has a WERBAS base URL configured
+    /// (see issue #9 / werkstatt-call-server settings). The client falls back
+    /// to a placeholder when `None`.
+    #[garde(skip)]
+    pub werbas_url: Option<String>,
 }

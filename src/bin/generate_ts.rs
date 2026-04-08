@@ -9,7 +9,8 @@ use std::io;
 use ts_rs::TS;
 use werkstatt_call_shared::{
     CallDirection, CallEvent, CallNote, ClientCommand, ClientHello, ContactPerson, Customer,
-    EnrichedCallEvent, LinkSource, NoteCategory, PhoneLink, ServerEvent, Vehicle,
+    EnrichedCallEvent, LastContact, LinkSource, NoteCategory, OpenItem, OpenOrder, PhoneLink,
+    ServerEvent, Vehicle,
 };
 
 fn main() -> io::Result<()> {
@@ -40,6 +41,9 @@ fn main() -> io::Result<()> {
         CallEvent,
         Customer,
         Vehicle,
+        OpenOrder,
+        OpenItem,
+        LastContact,
         EnrichedCallEvent,
         NoteCategory,
         CallNote,
