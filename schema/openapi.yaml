@@ -1,0 +1,304 @@
+openapi: 3.1.0
+info:
+  title: werkstatt-call Shared Schemas
+  version: 0.1.0
+  description: >
+    Component schemas shared between werkstatt-call-server (REST + WebSocket)
+    and werkstatt-call-client. These schemas are the authoritative definitions
+    derived from the Rust types in werkstatt-call-shared.
+
+components:
+  schemas:
+
+    CallDirection:
+      type: string
+      enum:
+        - Inbound
+        - Outbound
+      description: Direction of a telephone call.
+
+    CallEvent:
+      type: object
+      required:
+        - callId
+        - direction
+        - phoneNumber
+        - startedAt
+        - extension
+      properties:
+        callId:
+          type: string
+          description: Unique Placetel call identifier.
+        direction:
+          $ref: '#/components/schemas/CallDirection'
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          description: Caller/callee phone number in E.164 format.
+          example: "+4989123456789"
+        startedAt:
+          type: string
+          format: date-time
+          description: UTC timestamp when the call was established.
+        extension:
+          type: string
+          description: Internal ISDN extension that received or placed the call.
+
+    Customer:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: WERBAS customer identifier.
+        name:
+          type: string
+          description: Customer display name.
+
+    Vehicle:
+      type: object
+      required:
+        - vehicleId
+        - label
+      properties:
+        vehicleId:
+          type: string
+          description: WERBAS vehicle identifier.
+        label:
+          type: string
+          description: Human-readable vehicle label.
+          example: "Mercedes Actros 2023"
+        licensePlate:
+          type: string
+          nullable: true
+          description: License plate of the vehicle, if known.
+
+    EnrichedCallEvent:
+      type: object
+      required:
+        - callEvent
+        - vehicles
+        - unresolved
+      properties:
+        callEvent:
+          $ref: '#/components/schemas/CallEvent'
+        customer:
+          $ref: '#/components/schemas/Customer'
+          nullable: true
+        vehicles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+        openOrder:
+          type: string
+          nullable: true
+          description: Open work-order identifier in WERBAS, if any.
+        lastContact:
+          type: string
+          format: date-time
+          nullable: true
+          description: UTC timestamp of last contact with this customer.
+        unresolved:
+          type: boolean
+          description: Whether the customer has unresolved open orders.
+
+    NoteCategory:
+      type: string
+      enum:
+        - Termin
+        - Panne
+        - Reklamation
+        - Angebot
+        - Sonstiges
+      description: Category of a call note.
+
+    CallNote:
+      type: object
+      required:
+        - callId
+        - createdAt
+        - createdBy
+        - category
+        - text
+        - followUp
+      properties:
+        callId:
+          type: string
+          description: The call this note belongs to (Placetel call ID).
+        createdAt:
+          type: string
+          format: date-time
+          description: UTC timestamp when the note was created.
+        createdBy:
+          type: string
+          description: Shorthand identifier of the employee who created the note.
+        category:
+          $ref: '#/components/schemas/NoteCategory'
+        text:
+          type: string
+          maxLength: 5000
+          description: Free-text note content (max 5 000 bytes).
+        followUp:
+          type: boolean
+          description: Whether a follow-up action is required.
+        orderRef:
+          type: string
+          nullable: true
+          description: Optional reference to a WERBAS work-order number.
+
+    LinkSource:
+      type: string
+      enum:
+        - Manual
+        - AutoWerbas
+        - Import
+      description: Source of a phone-number-to-customer link.
+
+    ContactPerson:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          description: Full name of the contact person (max 200 bytes).
+        role:
+          type: string
+          nullable: true
+          description: Role or job title of the contact person.
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes about this contact.
+
+    PhoneLink:
+      type: object
+      required:
+        - phoneNumber
+        - customerId
+        - source
+        - confidence
+      properties:
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          description: Phone number in E.164 format.
+          example: "+4989123456789"
+        customerId:
+          type: string
+          description: WERBAS customer identifier this number is linked to.
+        contactPerson:
+          $ref: '#/components/schemas/ContactPerson'
+          nullable: true
+        role:
+          type: string
+          nullable: true
+          description: Role of the contact in the context of this link.
+        source:
+          $ref: '#/components/schemas/LinkSource'
+        confidence:
+          type: number
+          format: double
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence score of the automatic match in [0.0, 1.0].
+
+    ClientHello:
+      type: object
+      required:
+        - hostname
+        - userShorthand
+        - extensions
+      properties:
+        hostname:
+          type: string
+          description: Hostname of the client machine.
+        userShorthand:
+          type: string
+          description: Short identifier of the logged-in employee.
+          example: "MS"
+        extensions:
+          type: array
+          items:
+            type: string
+          description: Optional protocol extensions the client supports.
+
+    ServerEvent:
+      description: >
+        Tagged-union of all events pushed from the server to connected clients.
+        The `type` field is the discriminant.
+      oneOf:
+        - type: object
+          required: [type, event]
+          properties:
+            type:
+              type: string
+              enum: [incomingCall]
+            event:
+              $ref: '#/components/schemas/EnrichedCallEvent'
+        - type: object
+          required: [type, callId]
+          properties:
+            type:
+              type: string
+              enum: [callEnded]
+            callId:
+              type: string
+        - type: object
+          required: [type, callId]
+          properties:
+            type:
+              type: string
+              enum: [noteConfirmed]
+            callId:
+              type: string
+        - type: object
+          required: [type, message]
+          properties:
+            type:
+              type: string
+              enum: [error]
+            message:
+              type: string
+      discriminator:
+        propertyName: type
+
+    ClientCommand:
+      description: >
+        Tagged-union of all commands sent from a client to the server.
+        The `type` field is the discriminant.
+      oneOf:
+        - type: object
+          required: [type, callId, note]
+          properties:
+            type:
+              type: string
+              enum: [saveNote]
+            callId:
+              type: string
+            note:
+              $ref: '#/components/schemas/CallNote'
+        - type: object
+          required: [type, phoneNumber, customerId]
+          properties:
+            type:
+              type: string
+              enum: [linkPhone]
+            phoneNumber:
+              type: string
+              pattern: '^\+[1-9]\d{1,14}$'
+            customerId:
+              type: string
+        - type: object
+          required: [type, callId]
+          properties:
+            type:
+              type: string
+              enum: [ack]
+            callId:
+              type: string
+      discriminator:
+        propertyName: type
