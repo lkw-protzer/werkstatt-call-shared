@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Regenerated `generated/types.ts` to reflect latest Rust types (`ClientHello` fields `user`/`clientVersion`/`connectedAt`; `ServerEvent` variants `phoneLinkUpdated`/`heartbeat`; `ClientCommand` variants `requestCallHistory`/`ping`)
+- Updated `schema/openapi.yaml` to match current types: `ClientHello` now uses `user` instead of `userShorthand` and includes `clientVersion`/`connectedAt`; `ServerEvent` and `ClientCommand` schemas include all new variants
+
 ## [0.1.0] — 2026-04-08
 
 ### Added

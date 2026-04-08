@@ -210,21 +210,31 @@ components:
       type: object
       required:
         - hostname
-        - userShorthand
+        - user
         - extensions
+        - clientVersion
+        - connectedAt
       properties:
         hostname:
           type: string
           description: Hostname of the client machine.
-        userShorthand:
+        user:
           type: string
-          description: Short identifier of the logged-in employee.
+          description: Short identifier of the logged-in employee (e.g. "MS").
           example: "MS"
         extensions:
           type: array
           items:
             type: string
           description: Optional protocol extensions the client supports.
+        clientVersion:
+          type: string
+          description: Semantic version of the client application (e.g. "0.1.0").
+          example: "0.1.0"
+        connectedAt:
+          type: string
+          format: date-time
+          description: UTC timestamp of when the client established the WebSocket connection.
 
     ServerEvent:
       description: >
@@ -263,6 +273,20 @@ components:
               enum: [error]
             message:
               type: string
+        - type: object
+          required: [type, link]
+          properties:
+            type:
+              type: string
+              enum: [phoneLinkUpdated]
+            link:
+              $ref: '#/components/schemas/PhoneLink'
+        - type: object
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [heartbeat]
       discriminator:
         propertyName: type
 
@@ -300,5 +324,21 @@ components:
               enum: [ack]
             callId:
               type: string
+        - type: object
+          required: [type, phoneNumber]
+          properties:
+            type:
+              type: string
+              enum: [requestCallHistory]
+            phoneNumber:
+              type: string
+              pattern: '^\+[1-9]\d{1,14}$'
+              description: Phone number in E.164 format whose call history is requested.
+        - type: object
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [ping]
       discriminator:
         propertyName: type
