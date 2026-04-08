@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `ClientHello` now derives `garde::Validate` (all fields `#[garde(skip)]`) — completes F5.1 acceptance criteria (issue #7)
+- `CONTRIBUTING.md` with Semantic Versioning rules (PATCH/MINOR/MAJOR), breaking-change workflow, and cross-repo update procedure (issue #8)
+- Versioning section added to `README.md` (issue #8)
 
 ### Changed
 

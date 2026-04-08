@@ -32,6 +32,21 @@ cargo run --bin generate-ts > ../werkstatt-call-client/src/lib/types/generated.t
 - [`werkstatt-call-client`](https://github.com/power-del/werkstatt-call-client) — konsumiert die generierten TS-Types
 - [`werkstatt-call-docs`](https://github.com/power-del/werkstatt-call-docs) — Architektur und ADRs
 
+## Versionierung
+
+Dieses Crate folgt [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+
+| Versionstyp | Wann |
+|---|---|
+| **PATCH** (`0.1.x`) | Bugfixes, Doku-Korrekturen, Tests — keine API-Änderung |
+| **MINOR** (`0.x.0`) | Neue Types/Felder, abwärtskompatible Erweiterungen |
+| **MAJOR** (`x.0.0`) | Breaking Changes (Felder/Varianten entfernt, Typen umbenannt, Serialisierungsformat geändert) |
+
+**Breaking-Change-Policy:** Vor jedem MAJOR-Bump muss ein ADR im
+[`werkstatt-call-docs`](https://github.com/power-del/werkstatt-call-docs)-Repo erstellt und gemergt sein.
+
+Details zum Contribution-Workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
 ## Lizenz
 
 Proprietär — LKW Protzer GmbH & Co. KG
