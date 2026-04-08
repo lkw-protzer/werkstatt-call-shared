@@ -16,8 +16,8 @@ pub mod validation;
 pub mod ws_protocol;
 
 pub use call_event::{
-    CallDirection, CallEvent, Customer, EnrichedCallEvent, LastContact, OpenItem, OpenOrder,
-    Vehicle,
+    CallDirection, CallEvent, Customer, CustomerSuggestion, EnrichedCallEvent, LastContact,
+    OpenItem, OpenOrder, Vehicle,
 };
 pub use call_note::{CallNote, NoteCategory};
 pub use error::SharedError;

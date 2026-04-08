@@ -121,6 +121,26 @@ pub struct LastContact {
     pub contact_type: String,
 }
 
+/// A candidate customer match returned when a phone number is unresolved.
+///
+/// Used to populate the suggestion list when `phone_links` has no entry for
+/// the caller's number. Candidates are ranked by area-code proximity.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomerSuggestion {
+    /// WERBAS customer identifier.
+    pub customer_id: String,
+
+    /// Customer display name, if known from `phone_links` or WERBAS cache.
+    pub name: Option<String>,
+
+    /// Known phone number for this customer in E.164 format.
+    pub phone_e164: String,
+
+    /// Human-readable reason for the match (e.g. `"area_code_match"`).
+    pub match_reason: String,
+}
+
 /// A call event enriched with WERBAS customer and vehicle data.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -149,9 +169,19 @@ pub struct EnrichedCallEvent {
     #[garde(skip)]
     pub open_items: Vec<OpenItem>,
 
-    /// Whether the customer has unresolved open orders (legacy flag).
+    /// Whether the caller could not be matched to a WERBAS customer.
+    ///
+    /// When `true`, `customer` / `vehicles` / `open_orders` / `open_items`
+    /// are empty and `suggestions` may contain candidate matches.
     #[garde(skip)]
     pub unresolved: bool,
+
+    /// Candidate customer matches when `unresolved = true`.
+    ///
+    /// Ranked by area-code proximity (Ortsvorwahl-Heuristik). Empty when
+    /// the caller was resolved or when no candidates could be found.
+    #[garde(skip)]
+    pub suggestions: Vec<CustomerSuggestion>,
 
     /// WERBAS deep-link URL for this customer, constructed by the server.
     ///
