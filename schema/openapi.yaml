@@ -56,6 +56,14 @@ components:
         name:
           type: string
           description: Customer display name.
+        customerNumber:
+          type: string
+          nullable: true
+          description: WERBAS customer number (Kundennummer), if available.
+        city:
+          type: string
+          nullable: true
+          description: City of the customer's primary address (Ort), if available.
 
     Vehicle:
       type: object
@@ -74,12 +82,77 @@ components:
           type: string
           nullable: true
           description: License plate of the vehicle, if known.
+        nextHuDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of the next mandatory vehicle inspection (Hauptuntersuchung/HU).
+        nextAuDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date of the next exhaust emissions test (Abgasuntersuchung/AU).
+
+    OpenOrder:
+      type: object
+      required:
+        - id
+        - orderNumber
+        - status
+      properties:
+        id:
+          type: string
+          description: WERBAS work order identifier.
+        orderNumber:
+          type: string
+          description: Human-readable order number shown in WERBAS.
+        description:
+          type: string
+          nullable: true
+          description: Short description of the work order, if available.
+        status:
+          type: string
+          description: Current status of the order (e.g. "Offen", "In Arbeit", "Fertig").
+
+    OpenItem:
+      type: object
+      required:
+        - id
+        - amountEur
+      properties:
+        id:
+          type: string
+          description: WERBAS invoice or document identifier.
+        amountEur:
+          type: number
+          format: double
+          description: Outstanding amount in EUR (positive = customer owes the workshop).
+        label:
+          type: string
+          nullable: true
+          description: Short label (e.g. invoice number or description).
+
+    LastContact:
+      type: object
+      required:
+        - date
+        - contactType
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: UTC timestamp of the last contact.
+        contactType:
+          type: string
+          description: Human-readable contact type (e.g. "Anruf", "E-Mail", "Termin").
 
     EnrichedCallEvent:
       type: object
       required:
         - callEvent
         - vehicles
+        - openOrders
+        - openItems
         - unresolved
       properties:
         callEvent:
@@ -91,18 +164,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Vehicle'
-        openOrder:
-          type: string
-          nullable: true
-          description: Open work-order identifier in WERBAS, if any.
+          description: Vehicles associated with the matched customer.
+        openOrders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenOrder'
+          description: Open work orders in WERBAS for the matched customer.
+        openItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenItem'
+          description: Open financial items (Offene Posten) for the matched customer.
         lastContact:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/LastContact'
           nullable: true
-          description: UTC timestamp of last contact with this customer.
         unresolved:
           type: boolean
-          description: Whether the customer has unresolved open orders.
+          description: Whether the customer has unresolved open orders (legacy flag).
+        werbasUrl:
+          type: string
+          nullable: true
+          description: WERBAS deep-link URL for this customer, constructed by the server.
 
     NoteCategory:
       type: string

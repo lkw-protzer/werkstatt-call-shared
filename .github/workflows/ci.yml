@@ -48,3 +48,6 @@ jobs:
             echo "Run 'cargo run --bin generate-ts' and commit the result."
             exit 1
           fi
+
+      - name: Validate OpenAPI schema
+        run: npx --yes @redocly/cli lint schema/openapi.yaml

@@ -15,8 +15,12 @@ garde = { version = "0.20", features = ["derive", "regex"] }
 once_cell = "1"
 regex = "1"
 ts-rs = { version = "10", features = ["chrono-impl"] }
-utoipa = { version = "4", features = ["chrono"] }
+utoipa = { version = "4", features = ["chrono", "yaml"] }
 
 [[bin]]
 name = "generate-ts"
 path = "src/bin/generate_ts.rs"
+
+[[bin]]
+name = "generate-openapi"
+path = "src/bin/generate_openapi.rs"
