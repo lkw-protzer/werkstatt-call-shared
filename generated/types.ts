@@ -157,11 +157,19 @@ hostname: string,
 /**
  * Short identifier of the logged-in employee (e.g. `"MS"`).
  */
-userShorthand: string, 
+user: string, 
 /**
  * List of optional protocol extensions the client supports.
  */
-extensions: Array<string>, };
+extensions: Array<string>, 
+/**
+ * Semantic version of the client application (e.g. `"0.1.0"`).
+ */
+clientVersion: string, 
+/**
+ * UTC timestamp of when the client established the WebSocket connection.
+ */
+connectedAt: string, };
 
 type ServerEvent = { "type": "incomingCall", 
 /**
@@ -179,7 +187,11 @@ callId: string, } | { "type": "error",
 /**
  * Human-readable error description.
  */
-message: string, };
+message: string, } | { "type": "phoneLinkUpdated", 
+/**
+ * The updated phone link record.
+ */
+link: PhoneLink, } | { "type": "heartbeat" };
 
 type ClientCommand = { "type": "saveNote", 
 /**
@@ -201,4 +213,8 @@ customerId: string, } | { "type": "ack",
 /**
  * Placetel call identifier of the acknowledged event.
  */
-callId: string, };
+callId: string, } | { "type": "requestCallHistory", 
+/**
+ * Phone number in E.164 format whose call history is requested.
+ */
+phoneNumber: string, } | { "type": "ping" };
