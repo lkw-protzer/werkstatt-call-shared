@@ -1,11 +1,13 @@
 //! WebSocket protocol message types exchanged between server and client.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use utoipa::ToSchema;
 
 use crate::call_event::EnrichedCallEvent;
 use crate::call_note::CallNote;
+use crate::phone_link::PhoneLink;
 
 /// Initial handshake message sent by the client upon WebSocket connection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS, ToSchema)]
@@ -15,10 +17,16 @@ pub struct ClientHello {
     pub hostname: String,
 
     /// Short identifier of the logged-in employee (e.g. `"MS"`).
-    pub user_shorthand: String,
+    pub user: String,
 
     /// List of optional protocol extensions the client supports.
     pub extensions: Vec<String>,
+
+    /// Semantic version of the client application (e.g. `"0.1.0"`).
+    pub client_version: String,
+
+    /// UTC timestamp of when the client established the WebSocket connection.
+    pub connected_at: DateTime<Utc>,
 }
 
 /// Events pushed from the server to connected clients.
@@ -51,6 +59,15 @@ pub enum ServerEvent {
         /// Human-readable error description.
         message: String,
     },
+
+    /// A phone number to WERBAS customer link has been created or updated.
+    PhoneLinkUpdated {
+        /// The updated phone link record.
+        link: PhoneLink,
+    },
+
+    /// Keep-alive heartbeat from the server; clients should respond with `Ping`.
+    Heartbeat,
 }
 
 /// Commands sent from a client to the server.
@@ -83,4 +100,14 @@ pub enum ClientCommand {
         #[serde(rename = "callId")]
         call_id: String,
     },
+
+    /// Request the call history for a given phone number.
+    RequestCallHistory {
+        /// Phone number in E.164 format whose call history is requested.
+        #[serde(rename = "phoneNumber")]
+        phone_number: String,
+    },
+
+    /// Client-side keep-alive; the server should respond with `Heartbeat`.
+    Ping,
 }

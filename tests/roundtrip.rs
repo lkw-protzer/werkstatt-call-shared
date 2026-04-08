@@ -308,16 +308,34 @@ fn phone_link_customer_id_key() {
 // ClientHello
 // ---------------------------------------------------------------------------
 
+fn client_hello() -> ClientHello {
+    ClientHello {
+        hostname: "WORKSTATION-01".to_string(),
+        user: "MS".to_string(),
+        extensions: vec!["msgpack".to_string()],
+        client_version: "0.1.0".to_string(),
+        connected_at: fixed_dt(),
+    }
+}
+
 #[test]
 fn client_hello_roundtrip() {
-    let v = ClientHello {
-        hostname: "WORKSTATION-01".to_string(),
-        user_shorthand: "MS".to_string(),
-        extensions: vec!["msgpack".to_string()],
-    };
+    let v = client_hello();
     let json = serde_json::to_string(&v).unwrap();
     let back: ClientHello = serde_json::from_str(&json).unwrap();
     assert_eq!(v, back);
+}
+
+#[test]
+fn client_hello_camel_case_keys() {
+    let obj: Value = serde_json::to_value(&client_hello()).unwrap();
+    assert!(obj.get("clientVersion").is_some(), "expected clientVersion");
+    assert!(obj.get("connectedAt").is_some(), "expected connectedAt");
+    assert!(obj.get("user").is_some(), "expected user");
+    assert!(
+        obj.get("user_shorthand").is_none(),
+        "unexpected user_shorthand"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -377,6 +395,27 @@ fn server_event_tag_field_present() {
     assert_eq!(obj["type"], "callEnded");
 }
 
+#[test]
+fn server_event_phone_link_updated_roundtrip() {
+    let v = ServerEvent::PhoneLinkUpdated { link: phone_link() };
+    let json = serde_json::to_string(&v).unwrap();
+    let back: ServerEvent = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+    let obj: Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(obj["type"], "phoneLinkUpdated");
+    assert!(obj.get("link").is_some(), "expected link field");
+}
+
+#[test]
+fn server_event_heartbeat_roundtrip() {
+    let v = ServerEvent::Heartbeat;
+    let json = serde_json::to_string(&v).unwrap();
+    let back: ServerEvent = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+    let obj: Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(obj["type"], "heartbeat");
+}
+
 // ---------------------------------------------------------------------------
 // ClientCommand
 // ---------------------------------------------------------------------------
@@ -411,6 +450,29 @@ fn client_command_ack_roundtrip() {
     let json = serde_json::to_string(&v).unwrap();
     let back: ClientCommand = serde_json::from_str(&json).unwrap();
     assert_eq!(v, back);
+}
+
+#[test]
+fn client_command_request_call_history_roundtrip() {
+    let v = ClientCommand::RequestCallHistory {
+        phone_number: "+4989123456789".to_string(),
+    };
+    let json = serde_json::to_string(&v).unwrap();
+    let back: ClientCommand = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+    let obj: Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(obj["type"], "requestCallHistory");
+    assert_eq!(obj["phoneNumber"], "+4989123456789");
+}
+
+#[test]
+fn client_command_ping_roundtrip() {
+    let v = ClientCommand::Ping;
+    let json = serde_json::to_string(&v).unwrap();
+    let back: ClientCommand = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+    let obj: Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(obj["type"], "ping");
 }
 
 // ---------------------------------------------------------------------------
