@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ClientHello` now derives `garde::Validate` (all fields `#[garde(skip)]`) — completes F5.1 acceptance criteria (issue #7)
+
 ### Changed
 
 - Regenerated `generated/types.ts` to reflect latest Rust types (`ClientHello` fields `user`/`clientVersion`/`connectedAt`; `ServerEvent` variants `phoneLinkUpdated`/`heartbeat`; `ClientCommand` variants `requestCallHistory`/`ping`)

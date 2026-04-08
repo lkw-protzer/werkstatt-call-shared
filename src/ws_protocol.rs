@@ -1,6 +1,7 @@
 //! WebSocket protocol message types exchanged between server and client.
 
 use chrono::{DateTime, Utc};
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use utoipa::ToSchema;
@@ -10,22 +11,27 @@ use crate::call_note::CallNote;
 use crate::phone_link::PhoneLink;
 
 /// Initial handshake message sent by the client upon WebSocket connection.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS, ToSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ClientHello {
     /// Hostname of the client machine.
+    #[garde(skip)]
     pub hostname: String,
 
     /// Short identifier of the logged-in employee (e.g. `"MS"`).
+    #[garde(skip)]
     pub user: String,
 
     /// List of optional protocol extensions the client supports.
+    #[garde(skip)]
     pub extensions: Vec<String>,
 
     /// Semantic version of the client application (e.g. `"0.1.0"`).
+    #[garde(skip)]
     pub client_version: String,
 
     /// UTC timestamp of when the client established the WebSocket connection.
+    #[garde(skip)]
     pub connected_at: DateTime<Utc>,
 }
 

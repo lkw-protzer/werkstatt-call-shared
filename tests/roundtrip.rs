@@ -443,6 +443,13 @@ fn client_hello_roundtrip() {
 }
 
 #[test]
+fn client_hello_passes_validation() {
+    client_hello()
+        .validate()
+        .expect("valid ClientHello must pass");
+}
+
+#[test]
 fn client_hello_camel_case_keys() {
     let obj: Value = serde_json::to_value(&client_hello()).unwrap();
     assert!(obj.get("clientVersion").is_some(), "expected clientVersion");
