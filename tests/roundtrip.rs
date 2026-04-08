@@ -77,6 +77,7 @@ fn enriched_call_event() -> EnrichedCallEvent {
         last_contact: Some(last_contact()),
         open_items: vec![open_item()],
         unresolved: true,
+        suggestions: vec![],
         werbas_url: Some("http://werbas.local/customer/cust-99".to_string()),
     }
 }
@@ -287,6 +288,7 @@ fn enriched_call_event_unresolved_roundtrip() {
         last_contact: None,
         open_items: vec![],
         unresolved: false,
+        suggestions: vec![],
         werbas_url: None,
     };
     let json = serde_json::to_string(&v).unwrap();
