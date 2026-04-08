@@ -10,26 +10,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check:
-    name: fmt · clippy · test · codegen
+  lint:
+    name: lint (fmt + clippy)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt, clippy
-
-      - name: Cache Cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt --check
         run: cargo fmt --check
@@ -37,17 +26,45 @@ jobs:
       - name: cargo clippy -- -D warnings
         run: cargo clippy -- -D warnings
 
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
       - name: cargo test
         run: cargo test
 
-      - name: Check TypeScript codegen is up to date
+  codegen-check:
+    name: codegen-check (TS freshness)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Regenerate TypeScript types
+        run: cargo run --bin generate-ts
+
+      - name: Fail if generated/types.ts is stale
         run: |
-          cargo run --bin generate-ts
           if ! git diff --exit-code generated/types.ts; then
             echo "ERROR: generated/types.ts is out of date."
-            echo "Run 'cargo run --bin generate-ts' and commit the result."
+            echo "Run 'cargo run --bin generate-ts' locally and commit the result."
             exit 1
           fi
+
+  openapi-lint:
+    name: openapi-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Validate OpenAPI schema
         run: npx --yes @redocly/cli lint schema/openapi.yaml

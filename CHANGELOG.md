@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- CI pipeline (`.github/workflows/ci.yml`): four parallel jobs — `lint` (`cargo fmt --check` + `cargo clippy -- -D warnings`), `test` (`cargo test`), `codegen-check` (TS freshness via `git diff --exit-code`), and `openapi-lint` (`@redocly/cli`); all using `actions-rust-lang/setup-rust-toolchain@v1` (issue #9)
 - `ClientHello` now derives `garde::Validate` (all fields `#[garde(skip)]`) — completes F5.1 acceptance criteria (issue #7)
 - `CONTRIBUTING.md` with Semantic Versioning rules (PATCH/MINOR/MAJOR), breaking-change workflow, and cross-repo update procedure (issue #8)
 - Versioning section added to `README.md` (issue #8)
