@@ -3,7 +3,8 @@ use garde::Validate;
 use serde_json::Value;
 use werkstatt_call_shared::{
     CallDirection, CallEvent, CallNote, ClientCommand, ClientHello, ContactPerson, Customer,
-    EnrichedCallEvent, LinkSource, NoteCategory, PhoneLink, ServerEvent, Vehicle,
+    EnrichedCallEvent, LastContact, LinkSource, NoteCategory, OpenItem, OpenOrder, PhoneLink,
+    ServerEvent, Vehicle,
 };
 
 // ---------------------------------------------------------------------------
@@ -28,6 +29,8 @@ fn customer() -> Customer {
     Customer {
         id: "cust-99".to_string(),
         name: "Max Mustermann GmbH".to_string(),
+        customer_number: Some("KD-12345".to_string()),
+        city: Some("München".to_string()),
     }
 }
 
@@ -36,6 +39,32 @@ fn vehicle() -> Vehicle {
         vehicle_id: "veh-1".to_string(),
         label: "Mercedes Actros 2021".to_string(),
         license_plate: Some("M-XY 1234".to_string()),
+        next_hu_date: Some(Utc.with_ymd_and_hms(2024, 6, 1, 0, 0, 0).unwrap()),
+        next_au_date: None,
+    }
+}
+
+fn open_order() -> OpenOrder {
+    OpenOrder {
+        id: "ord-001".to_string(),
+        order_number: "AUF-4711".to_string(),
+        description: Some("Ölwechsel".to_string()),
+        status: "Offen".to_string(),
+    }
+}
+
+fn open_item() -> OpenItem {
+    OpenItem {
+        id: "item-001".to_string(),
+        amount_eur: 250.0,
+        label: Some("RE-2024-001".to_string()),
+    }
+}
+
+fn last_contact() -> LastContact {
+    LastContact {
+        date: fixed_dt(),
+        contact_type: "Anruf".to_string(),
     }
 }
 
@@ -44,9 +73,11 @@ fn enriched_call_event() -> EnrichedCallEvent {
         call_event: call_event(),
         customer: Some(customer()),
         vehicles: vec![vehicle()],
-        open_order: Some("AUF-4711".to_string()),
-        last_contact: Some(fixed_dt()),
+        open_orders: vec![open_order()],
+        last_contact: Some(last_contact()),
+        open_items: vec![open_item()],
         unresolved: true,
+        werbas_url: Some("http://werbas.local/customer/cust-99".to_string()),
     }
 }
 
@@ -137,6 +168,17 @@ fn customer_roundtrip() {
     assert_eq!(v, back);
 }
 
+#[test]
+fn customer_camel_case_keys() {
+    let v = customer();
+    let obj: Value = serde_json::to_value(&v).unwrap();
+    assert!(
+        obj.get("customerNumber").is_some(),
+        "expected customerNumber"
+    );
+    assert!(obj.get("city").is_some(), "expected city");
+}
+
 // ---------------------------------------------------------------------------
 // Vehicle
 // ---------------------------------------------------------------------------
@@ -155,10 +197,72 @@ fn vehicle_no_license_plate_roundtrip() {
         vehicle_id: "veh-2".to_string(),
         label: "MAN TGX".to_string(),
         license_plate: None,
+        next_hu_date: None,
+        next_au_date: None,
     };
     let json = serde_json::to_string(&v).unwrap();
     let back: Vehicle = serde_json::from_str(&json).unwrap();
     assert_eq!(v, back);
+}
+
+#[test]
+fn vehicle_hu_au_camel_case_keys() {
+    let v = vehicle();
+    let obj: Value = serde_json::to_value(&v).unwrap();
+    assert!(obj.get("nextHuDate").is_some(), "expected nextHuDate");
+    assert!(obj.get("nextAuDate").is_some(), "expected nextAuDate");
+}
+
+// ---------------------------------------------------------------------------
+// OpenOrder
+// ---------------------------------------------------------------------------
+
+#[test]
+fn open_order_roundtrip() {
+    let v = open_order();
+    let json = serde_json::to_string(&v).unwrap();
+    let back: OpenOrder = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+}
+
+#[test]
+fn open_order_camel_case_keys() {
+    let v = open_order();
+    let obj: Value = serde_json::to_value(&v).unwrap();
+    assert!(obj.get("orderNumber").is_some(), "expected orderNumber");
+    assert!(obj.get("status").is_some(), "expected status");
+}
+
+// ---------------------------------------------------------------------------
+// OpenItem
+// ---------------------------------------------------------------------------
+
+#[test]
+fn open_item_roundtrip() {
+    let v = open_item();
+    let json = serde_json::to_string(&v).unwrap();
+    let back: OpenItem = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+}
+
+// ---------------------------------------------------------------------------
+// LastContact
+// ---------------------------------------------------------------------------
+
+#[test]
+fn last_contact_roundtrip() {
+    let v = last_contact();
+    let json = serde_json::to_string(&v).unwrap();
+    let back: LastContact = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+}
+
+#[test]
+fn last_contact_camel_case_keys() {
+    let v = last_contact();
+    let obj: Value = serde_json::to_value(&v).unwrap();
+    assert!(obj.get("contactType").is_some(), "expected contactType");
+    assert!(obj.get("date").is_some(), "expected date");
 }
 
 // ---------------------------------------------------------------------------
@@ -179,13 +283,25 @@ fn enriched_call_event_unresolved_roundtrip() {
         call_event: call_event(),
         customer: None,
         vehicles: vec![],
-        open_order: None,
+        open_orders: vec![],
         last_contact: None,
+        open_items: vec![],
         unresolved: false,
+        werbas_url: None,
     };
     let json = serde_json::to_string(&v).unwrap();
     let back: EnrichedCallEvent = serde_json::from_str(&json).unwrap();
     assert_eq!(v, back);
+}
+
+#[test]
+fn enriched_call_event_camel_case_keys() {
+    let v = enriched_call_event();
+    let obj: Value = serde_json::to_value(&v).unwrap();
+    assert!(obj.get("openOrders").is_some(), "expected openOrders");
+    assert!(obj.get("lastContact").is_some(), "expected lastContact");
+    assert!(obj.get("openItems").is_some(), "expected openItems");
+    assert!(obj.get("werbasUrl").is_some(), "expected werbasUrl");
 }
 
 // ---------------------------------------------------------------------------
