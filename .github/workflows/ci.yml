@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt · clippy · test · codegen
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+
+      - name: cargo fmt --check
+        run: cargo fmt --check
+
+      - name: cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings
+
+      - name: cargo test
+        run: cargo test
+
+      - name: Check TypeScript codegen is up to date
+        run: |
+          cargo run --bin generate-ts
+          if ! git diff --exit-code generated/types.ts; then
+            echo "ERROR: generated/types.ts is out of date."
+            echo "Run 'cargo run --bin generate-ts' and commit the result."
+            exit 1
+          fi

@@ -431,6 +431,7 @@ fn invalid_e164_phone_number_fails_validation() {
         "+",                  // no digits
         "123456789",          // no + prefix
         "+12345678901234567", // too long (>15 digits total)
+        "+1",                 // only country code, no subscriber number
     ];
     for bad in &cases {
         let v = CallEvent {
@@ -442,6 +443,27 @@ fn invalid_e164_phone_number_fails_validation() {
             "expected validation failure for: {bad}"
         );
     }
+}
+
+#[test]
+fn valid_e164_minimum_subscriber_number_passes_validation() {
+    // Minimum valid E.164 per spec: +[1-9] followed by at least 1 more digit
+    let v = CallEvent {
+        phone_number: "+12".to_string(), // country code 1 + single digit
+        ..call_event()
+    };
+    v.validate()
+        .expect("two-digit E.164 must pass (e.g. +12 as test value)");
+}
+
+#[test]
+fn valid_e164_exactly_15_digits_passes_validation() {
+    // Maximum valid E.164: 15 total digits
+    let v = CallEvent {
+        phone_number: "+123456789012345".to_string(), // 15 digits total
+        ..call_event()
+    };
+    v.validate().expect("15-digit E.164 must pass");
 }
 
 // ---------------------------------------------------------------------------
