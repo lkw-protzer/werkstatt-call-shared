@@ -282,7 +282,11 @@ type ServerEvent = { "type": "incomingCall",
 /**
  * The enriched call event with WERBAS data.
  */
-event: EnrichedCallEvent, } | { "type": "callEnded", 
+event: EnrichedCallEvent, } | { "type": "callAnswered", 
+/**
+ * Placetel call identifier of the call that was answered.
+ */
+callId: string, } | { "type": "callEnded", 
 /**
  * Placetel call identifier of the call that ended.
  */

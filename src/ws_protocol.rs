@@ -55,6 +55,17 @@ pub enum ServerEvent {
         event: EnrichedCallEvent,
     },
 
+    /// A call has been answered (picked up).
+    ///
+    /// Pushed by the F1.3 event pipeline when Placetel reports an `answered`
+    /// event, allowing clients to update the call's visual status (e.g. remove
+    /// the ringing animation) without waiting for the `ended` event.
+    CallAnswered {
+        /// Placetel call identifier of the call that was answered.
+        #[serde(rename = "callId")]
+        call_id: String,
+    },
+
     /// A call has ended.
     CallEnded {
         /// Placetel call identifier of the call that ended.
