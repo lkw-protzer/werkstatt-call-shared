@@ -4,7 +4,7 @@ use serde_json::Value;
 use werkstatt_call_shared::{
     CallDirection, CallEvent, CallNote, ClientCommand, ClientHello, ContactPerson, Customer,
     EnrichedCallEvent, LastContact, LinkSource, NoteCategory, OpenItem, OpenOrder, PhoneLink,
-    ServerEvent, Vehicle,
+    ServerEvent, Vehicle, WireFormat,
 };
 
 // ---------------------------------------------------------------------------
@@ -433,6 +433,7 @@ fn client_hello() -> ClientHello {
         extensions: vec!["msgpack".to_string()],
         client_version: "0.1.0".to_string(),
         connected_at: fixed_dt(),
+        preferred_format: WireFormat::Json,
     }
 }
 
@@ -458,8 +459,24 @@ fn client_hello_camel_case_keys() {
     assert!(obj.get("connectedAt").is_some(), "expected connectedAt");
     assert!(obj.get("user").is_some(), "expected user");
     assert!(
+        obj.get("preferredFormat").is_some(),
+        "expected preferredFormat"
+    );
+    assert!(
         obj.get("user_shorthand").is_none(),
         "unexpected user_shorthand"
+    );
+}
+
+#[test]
+fn client_hello_preferred_format_defaults_to_json() {
+    // Simulate a legacy payload without the preferredFormat field
+    let json = r#"{"hostname":"WS","user":"MS","extensions":[],"clientVersion":"0.1.0","connectedAt":"2024-01-15T10:00:00Z"}"#;
+    let hello: ClientHello = serde_json::from_str(json).expect("must deserialize legacy payload");
+    assert_eq!(
+        hello.preferred_format,
+        WireFormat::Json,
+        "missing preferredFormat must default to Json"
     );
 }
 

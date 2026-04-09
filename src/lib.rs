@@ -13,6 +13,7 @@ pub mod call_note;
 pub mod error;
 pub mod phone_link;
 pub mod validation;
+pub mod wire;
 pub mod ws_protocol;
 
 pub use call_event::{
@@ -22,4 +23,5 @@ pub use call_event::{
 pub use call_note::{CallNote, NoteCategory};
 pub use error::SharedError;
 pub use phone_link::{ContactPerson, LinkSource, PhoneLink};
+pub use wire::{decode, encode, WireFormat};
 pub use ws_protocol::{ClientCommand, ClientHello, ServerEvent};

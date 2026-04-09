@@ -133,9 +133,19 @@ lastContact: LastContact | null,
  */
 openItems: Array<OpenItem>, 
 /**
- * Whether the customer has unresolved open orders (legacy flag).
+ * Whether the caller could not be matched to a WERBAS customer.
+ *
+ * When `true`, `customer` / `vehicles` / `open_orders` / `open_items`
+ * are empty and `suggestions` may contain candidate matches.
  */
 unresolved: boolean, 
+/**
+ * Candidate customer matches when `unresolved = true`.
+ *
+ * Ranked by area-code proximity (Ortsvorwahl-Heuristik). Empty when
+ * the caller was resolved or when no candidates could be found.
+ */
+suggestions: Array<CustomerSuggestion>, 
 /**
  * WERBAS deep-link URL for this customer, constructed by the server.
  *
@@ -219,6 +229,8 @@ source: LinkSource,
  */
 confidence: number, };
 
+type WireFormat = "json" | "msgPack";
+
 type ClientHello = { 
 /**
  * Hostname of the client machine.
@@ -239,7 +251,14 @@ clientVersion: string,
 /**
  * UTC timestamp of when the client established the WebSocket connection.
  */
-connectedAt: string, };
+connectedAt: string, 
+/**
+ * Preferred wire format for WebSocket messages.
+ *
+ * Defaults to [`WireFormat::Json`] for backwards compatibility — existing
+ * `ClientHello` payloads without this field deserialise as JSON.
+ */
+preferredFormat: WireFormat, };
 
 type ServerEvent = { "type": "incomingCall", 
 /**

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- F2.2: MessagePack as optional wire format for WebSocket traffic (issue #11)
+  - New Cargo feature `msgpack` (opt-in): `cargo build --features msgpack`
+  - Optional dependency `rmp-serde = "1"` behind the `msgpack` feature
+  - New `src/wire.rs`: `WireFormat { Json, MsgPack }` enum + `encode<T>` / `decode<T>` helpers
+  - `ClientHello` gains `preferred_format: WireFormat` field (`#[serde(default)]` → backwards-compatible; missing field deserialises as `Json`)
+  - 21 new MessagePack round-trip tests in `tests/msgpack_roundtrip.rs` covering all F1 types and both tagged enums (`ServerEvent`, `ClientCommand`)
+  - Two new CI jobs: `test-msgpack` and `lint-msgpack`
+  - `generated/types.ts` updated: new `WireFormat` type, `ClientHello.preferredFormat` field
 - CI pipeline (`.github/workflows/ci.yml`): four parallel jobs — `lint` (`cargo fmt --check` + `cargo clippy -- -D warnings`), `test` (`cargo test`), `codegen-check` (TS freshness via `git diff --exit-code`), and `openapi-lint` (`@redocly/cli`); all using `actions-rust-lang/setup-rust-toolchain@v1` (issue #9)
 - `ClientHello` now derives `garde::Validate` (all fields `#[garde(skip)]`) — completes F5.1 acceptance criteria (issue #7)
 - `CONTRIBUTING.md` with Semantic Versioning rules (PATCH/MINOR/MAJOR), breaking-change workflow, and cross-repo update procedure (issue #8)

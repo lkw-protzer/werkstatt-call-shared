@@ -9,6 +9,7 @@ use utoipa::ToSchema;
 use crate::call_event::EnrichedCallEvent;
 use crate::call_note::CallNote;
 use crate::phone_link::PhoneLink;
+use crate::wire::WireFormat;
 
 /// Initial handshake message sent by the client upon WebSocket connection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate, TS, ToSchema)]
@@ -33,6 +34,14 @@ pub struct ClientHello {
     /// UTC timestamp of when the client established the WebSocket connection.
     #[garde(skip)]
     pub connected_at: DateTime<Utc>,
+
+    /// Preferred wire format for WebSocket messages.
+    ///
+    /// Defaults to [`WireFormat::Json`] for backwards compatibility — existing
+    /// `ClientHello` payloads without this field deserialise as JSON.
+    #[garde(skip)]
+    #[serde(default)]
+    pub preferred_format: WireFormat,
 }
 
 /// Events pushed from the server to connected clients.

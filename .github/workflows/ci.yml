@@ -56,6 +56,30 @@ jobs:
             exit 1
           fi
 
+  test-msgpack:
+    name: test (msgpack feature)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: cargo test --features msgpack
+        run: cargo test --features msgpack
+
+  lint-msgpack:
+    name: clippy (msgpack feature)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
+
+      - name: cargo clippy --features msgpack -- -D warnings
+        run: cargo clippy --features msgpack -- -D warnings
+
   openapi-lint:
     name: openapi-lint
     runs-on: ubuntu-latest

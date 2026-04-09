@@ -10,7 +10,7 @@ use ts_rs::TS;
 use werkstatt_call_shared::{
     CallDirection, CallEvent, CallNote, ClientCommand, ClientHello, ContactPerson, Customer,
     EnrichedCallEvent, LastContact, LinkSource, NoteCategory, OpenItem, OpenOrder, PhoneLink,
-    ServerEvent, Vehicle,
+    ServerEvent, Vehicle, WireFormat,
 };
 
 fn main() -> io::Result<()> {
@@ -50,6 +50,7 @@ fn main() -> io::Result<()> {
         LinkSource,
         ContactPerson,
         PhoneLink,
+        WireFormat,
         ClientHello,
         ServerEvent,
         ClientCommand,
