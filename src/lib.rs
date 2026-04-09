@@ -9,6 +9,7 @@
 #![deny(missing_docs)]
 
 pub mod call_event;
+pub mod call_history;
 pub mod call_note;
 pub mod error;
 pub mod phone_link;
@@ -20,6 +21,7 @@ pub use call_event::{
     CallDirection, CallEvent, Customer, CustomerSuggestion, EnrichedCallEvent, LastContact,
     OpenItem, OpenOrder, Vehicle,
 };
+pub use call_history::{CallDetail, CallLogSummary};
 pub use call_note::{CallNote, NoteCategory};
 pub use error::SharedError;
 pub use phone_link::{ContactPerson, LinkSource, PhoneLink};

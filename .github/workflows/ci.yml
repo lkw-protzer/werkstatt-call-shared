@@ -55,6 +55,11 @@ jobs:
             echo "Run 'cargo run --bin generate-ts' locally and commit the result."
             exit 1
           fi
+          if [ -n "$(git status --porcelain generated/)" ]; then
+            echo "ERROR: generated/ contains untracked files after codegen."
+            echo "Run 'cargo run --bin generate-ts' locally and commit the result."
+            exit 1
+          fi
 
   test-msgpack:
     name: test (msgpack feature)

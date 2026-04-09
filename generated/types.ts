@@ -43,6 +43,24 @@ customerNumber: string | null,
  */
 city: string | null, };
 
+type CustomerSuggestion = { 
+/**
+ * WERBAS customer identifier.
+ */
+customerId: string, 
+/**
+ * Customer display name, if known from `phone_links` or WERBAS cache.
+ */
+name: string | null, 
+/**
+ * Known phone number for this customer in E.164 format.
+ */
+phoneE164: string, 
+/**
+ * Human-readable reason for the match (e.g. `"area_code_match"`).
+ */
+matchReason: string, };
+
 type Vehicle = { 
 /**
  * WERBAS vehicle identifier.
@@ -307,3 +325,72 @@ callId: string, } | { "type": "requestCallHistory",
  * Phone number in E.164 format whose call history is requested.
  */
 phoneNumber: string, } | { "type": "ping" };
+
+type CallLogSummary = { 
+/**
+ * Placetel call identifier (path parameter for other API calls).
+ */
+callId: string, 
+/**
+ * Inbound or outbound.
+ */
+direction: CallDirection, 
+/**
+ * E.164 phone number of the external party.
+ */
+phoneNumber: string, 
+/**
+ * Extension (Nebenstelle) that handled the call, if known.
+ */
+extension: string | null, 
+/**
+ * UTC timestamp when the call was initiated (from the first `ringing` event).
+ */
+startedAt: string | null, 
+/**
+ * UTC timestamp of the most recent event for this call.
+ */
+receivedAt: string, 
+/**
+ * Most recent event type seen (e.g. `"ringing"`, `"answered"`, `"ended"`).
+ */
+latestEvent: string, 
+/**
+ * Whether a conversation note has been recorded for this call.
+ */
+hasNote: boolean, };
+
+type CallDetail = { 
+/**
+ * Placetel call identifier.
+ */
+callId: string, 
+/**
+ * Inbound or outbound.
+ */
+direction: CallDirection, 
+/**
+ * E.164 phone number of the external party.
+ */
+phoneNumber: string, 
+/**
+ * Extension (Nebenstelle) that handled the call, if known.
+ */
+extension: string | null, 
+/**
+ * UTC timestamp when the call was initiated.
+ */
+startedAt: string | null, 
+/**
+ * UTC timestamp of the most recent event for this call.
+ */
+receivedAt: string, 
+/**
+ * All event types recorded for this call in chronological order
+ * (e.g. `["ringing", "answered", "ended"]`).
+ */
+events: Array<string>, 
+/**
+ * Conversation note recorded by an employee, if any.
+ */
+note: CallNote | null, };

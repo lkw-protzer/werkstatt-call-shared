@@ -8,9 +8,9 @@ use std::io;
 
 use ts_rs::TS;
 use werkstatt_call_shared::{
-    CallDirection, CallEvent, CallNote, ClientCommand, ClientHello, ContactPerson, Customer,
-    EnrichedCallEvent, LastContact, LinkSource, NoteCategory, OpenItem, OpenOrder, PhoneLink,
-    ServerEvent, Vehicle, WireFormat,
+    CallDetail, CallDirection, CallEvent, CallLogSummary, CallNote, ClientCommand, ClientHello,
+    ContactPerson, Customer, CustomerSuggestion, EnrichedCallEvent, LastContact, LinkSource,
+    NoteCategory, OpenItem, OpenOrder, PhoneLink, ServerEvent, Vehicle, WireFormat,
 };
 
 fn main() -> io::Result<()> {
@@ -40,6 +40,7 @@ fn main() -> io::Result<()> {
         CallDirection,
         CallEvent,
         Customer,
+        CustomerSuggestion,
         Vehicle,
         OpenOrder,
         OpenItem,
@@ -54,6 +55,8 @@ fn main() -> io::Result<()> {
         ClientHello,
         ServerEvent,
         ClientCommand,
+        CallLogSummary,
+        CallDetail,
     );
 
     // Trim trailing blank line
