@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Shared data types for the werkstatt-call system (server ↔ client)"
-license = "UNLICENSED"
+license = "MIT OR Apache-2.0"
 
 [features]
 default = []
