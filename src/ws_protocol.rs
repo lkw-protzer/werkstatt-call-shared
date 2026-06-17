@@ -64,6 +64,12 @@ pub enum ServerEvent {
         /// Placetel call identifier of the call that was answered.
         #[serde(rename = "callId")]
         call_id: String,
+
+        /// Login des Mitarbeiters, der angenommen hat (aus device_registry via peer).
+        #[serde(rename = "answeringUser")]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        answering_user: Option<String>,
     },
 
     /// A call has ended.
@@ -136,4 +142,31 @@ pub enum ClientCommand {
 
     /// Client-side keep-alive; the server should respond with `Heartbeat`.
     Ping,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn call_answered_serialises_answering_user() {
+        let e = ServerEvent::CallAnswered {
+            call_id: "c1".into(),
+            answering_user: Some("florian".into()),
+        };
+        let j = serde_json::to_string(&e).unwrap();
+        assert!(j.contains("\"answeringUser\":\"florian\""));
+        assert!(j.contains("\"type\":\"callAnswered\""));
+    }
+
+    #[test]
+    fn call_answered_omits_answering_user_when_none() {
+        let e = ServerEvent::CallAnswered {
+            call_id: "c1".into(),
+            answering_user: None,
+        };
+        let j = serde_json::to_string(&e).unwrap();
+        assert!(!j.contains("answeringUser"));
+        assert!(j.contains("\"callId\":\"c1\""));
+    }
 }

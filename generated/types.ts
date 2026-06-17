@@ -286,7 +286,11 @@ event: EnrichedCallEvent, } | { "type": "callAnswered",
 /**
  * Placetel call identifier of the call that was answered.
  */
-callId: string, } | { "type": "callEnded", 
+callId: string, 
+/**
+ * Login des Mitarbeiters, der angenommen hat (aus device_registry via peer).
+ */
+answeringUser?: string, } | { "type": "callEnded", 
 /**
  * Placetel call identifier of the call that ended.
  */
