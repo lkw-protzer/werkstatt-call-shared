@@ -100,6 +100,28 @@ pub enum ServerEvent {
 
     /// Keep-alive heartbeat from the server; clients should respond with `Ping`.
     Heartbeat,
+
+    /// Ergebnis einer CTI-Aktion (Annehmen, Ablehnen, Transferieren, Wählen).
+    ///
+    /// Wird nach Abschluss einer über [`ClientCommand`] ausgelösten CTI-Operation
+    /// an den aufrufenden Client zurückgesendet.
+    CtiResult {
+        /// Placetel-Call-Identifier, auf den sich die Aktion bezog.
+        #[serde(rename = "callId")]
+        call_id: String,
+
+        /// Bezeichner der ausgeführten Operation: `"answer"`, `"decline"`,
+        /// `"transfer"` oder `"dial"`.
+        op: String,
+
+        /// `true`, wenn die CTI-Aktion erfolgreich war; sonst `false`.
+        ok: bool,
+
+        /// Optionale Fehlerbeschreibung oder Zusatzinformation.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        detail: Option<String>,
+    },
 }
 
 /// Commands sent from a client to the server.
@@ -142,6 +164,30 @@ pub enum ClientCommand {
 
     /// Client-side keep-alive; the server should respond with `Heartbeat`.
     Ping,
+
+    /// Anforderung, einen laufenden Anruf anzunehmen (CTI-Aktion).
+    AnswerCall {
+        /// Placetel-Call-Identifier des anzunehmenden Anrufs.
+        #[serde(rename = "callId")]
+        call_id: String,
+    },
+
+    /// Anforderung, einen eingehenden Anruf abzulehnen (CTI-Aktion).
+    DeclineCall {
+        /// Placetel-Call-Identifier des abzulehnenden Anrufs.
+        #[serde(rename = "callId")]
+        call_id: String,
+    },
+
+    /// Anforderung, einen laufenden Anruf zu einem anderen Ziel weiterzuleiten (CTI-Aktion).
+    TransferCall {
+        /// Placetel-Call-Identifier des weiterzuleitenden Anrufs.
+        #[serde(rename = "callId")]
+        call_id: String,
+
+        /// Zielrufnummer oder SIP-Adresse für die Weiterleitung.
+        target: String,
+    },
 }
 
 #[cfg(test)]
@@ -168,5 +214,60 @@ mod tests {
         let j = serde_json::to_string(&e).unwrap();
         assert!(!j.contains("answeringUser"));
         assert!(j.contains("\"callId\":\"c1\""));
+    }
+
+    #[test]
+    fn cti_result_serialises_with_detail() {
+        let e = ServerEvent::CtiResult {
+            call_id: "c42".into(),
+            op: "answer".into(),
+            ok: true,
+            detail: Some("accepted".into()),
+        };
+        let j = serde_json::to_string(&e).unwrap();
+        assert!(j.contains("\"type\":\"ctiResult\""));
+        assert!(j.contains("\"callId\":\"c42\""));
+        assert!(j.contains("\"op\":\"answer\""));
+        assert!(j.contains("\"ok\":true"));
+        assert!(j.contains("\"detail\":\"accepted\""));
+    }
+
+    #[test]
+    fn cti_result_omits_detail_when_none() {
+        let e = ServerEvent::CtiResult {
+            call_id: "c42".into(),
+            op: "decline".into(),
+            ok: false,
+            detail: None,
+        };
+        let j = serde_json::to_string(&e).unwrap();
+        assert!(j.contains("\"type\":\"ctiResult\""));
+        assert!(!j.contains("detail"));
+    }
+
+    #[test]
+    fn answer_call_deserialises_from_json() {
+        let cmd: ClientCommand =
+            serde_json::from_str(r#"{"type":"answerCall","callId":"abc"}"#).unwrap();
+        assert_eq!(
+            cmd,
+            ClientCommand::AnswerCall {
+                call_id: "abc".into()
+            }
+        );
+    }
+
+    #[test]
+    fn transfer_call_deserialises_from_json() {
+        let cmd: ClientCommand =
+            serde_json::from_str(r#"{"type":"transferCall","callId":"xyz","target":"+4989123"}"#)
+                .unwrap();
+        assert_eq!(
+            cmd,
+            ClientCommand::TransferCall {
+                call_id: "xyz".into(),
+                target: "+4989123".into(),
+            }
+        );
     }
 }
