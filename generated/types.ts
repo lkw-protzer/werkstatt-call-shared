@@ -306,7 +306,32 @@ message: string, } | { "type": "phoneLinkUpdated",
 /**
  * The updated phone link record.
  */
-link: PhoneLink, } | { "type": "heartbeat" };
+link: PhoneLink, } | { "type": "heartbeat" } | { "type": "ctiResult", 
+/**
+ * Placetel-Call-Identifier, auf den sich die Aktion bezog.
+ */
+callId: string, 
+/**
+ * Bezeichner der ausgeführten Operation: `"answer"`, `"decline"`,
+ * `"transfer"` oder `"dial"`.
+ */
+op: string, 
+/**
+ * `true`, wenn die CTI-Aktion erfolgreich war; sonst `false`.
+ */
+ok: boolean, 
+/**
+ * Optionale Fehlerbeschreibung oder Zusatzinformation.
+ */
+detail?: string, } | { "type": "callbackCreated", 
+/**
+ * Der neu angelegte Rückrufauftrag.
+ */
+callback: Callback, } | { "type": "callbackUpdated", 
+/**
+ * Der aktualisierte Rückrufauftrag.
+ */
+callback: Callback, };
 
 type ClientCommand = { "type": "saveNote", 
 /**
@@ -332,7 +357,47 @@ callId: string, } | { "type": "requestCallHistory",
 /**
  * Phone number in E.164 format whose call history is requested.
  */
-phoneNumber: string, } | { "type": "ping" };
+phoneNumber: string, } | { "type": "ping" } | { "type": "answerCall", 
+/**
+ * Placetel-Call-Identifier des anzunehmenden Anrufs.
+ */
+callId: string, } | { "type": "declineCall", 
+/**
+ * Placetel-Call-Identifier des abzulehnenden Anrufs.
+ */
+callId: string, } | { "type": "transferCall", 
+/**
+ * Placetel-Call-Identifier des weiterzuleitenden Anrufs.
+ */
+callId: string, 
+/**
+ * Zielrufnummer oder SIP-Adresse für die Weiterleitung.
+ */
+target: string, } | { "type": "createCallback", 
+/**
+ * Rufnummer des Kunden in E.164-Format.
+ */
+phoneNumber: string, 
+/**
+ * Optionale WERBAS-Kundennummer, falls bereits bekannt.
+ */
+customerId: string | null, 
+/**
+ * Optionale Notiz zum Rückruf (z. B. Gesprächsanlass).
+ */
+note: string | null, 
+/**
+ * Login des Mitarbeiters, dem der Rückruf direkt zugewiesen werden soll.
+ */
+assignedTo: string | null, } | { "type": "claimCallback", 
+/**
+ * Eindeutige ID des zu beanspruchenden Rückrufauftrags.
+ */
+id: string, } | { "type": "dialCallback", 
+/**
+ * Eindeutige ID des auszuführenden Rückrufauftrags.
+ */
+id: string, };
 
 type CallLogSummary = { 
 /**
@@ -402,3 +467,33 @@ events: Array<string>,
  * Conversation note recorded by an employee, if any.
  */
 note: CallNote | null, };
+
+type Callback = { 
+/**
+ * Eindeutige ID des Rückrufauftrags (UUID als String).
+ */
+id: string, 
+/**
+ * Rufnummer, unter der der Kunde zurückgerufen werden soll.
+ */
+phoneNumber: string, 
+/**
+ * Optionale WERBAS-Kundennummer, falls bekannt.
+ */
+customerId: string | null, 
+/**
+ * Optionale Notiz zum Rückruf (z. B. Gesprächsanlass).
+ */
+note: string | null, 
+/**
+ * Login des Mitarbeiters, der den Rückruf angelegt hat.
+ */
+createdBy: string, 
+/**
+ * Login des Mitarbeiters, dem der Rückruf zugewiesen wurde.
+ */
+assignedTo: string | null, 
+/**
+ * Bearbeitungsstatus des Rückrufs (z. B. `"open"`, `"claimed"`, `"done"`).
+ */
+status: string, };
