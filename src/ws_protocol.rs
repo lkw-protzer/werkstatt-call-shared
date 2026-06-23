@@ -8,6 +8,7 @@ use utoipa::ToSchema;
 
 use crate::call_event::EnrichedCallEvent;
 use crate::call_note::CallNote;
+use crate::callback::Callback;
 use crate::phone_link::PhoneLink;
 use crate::wire::WireFormat;
 
@@ -122,6 +123,20 @@ pub enum ServerEvent {
         #[ts(optional)]
         detail: Option<String>,
     },
+
+    /// Ein neuer Rückrufauftrag wurde angelegt und an alle verbundenen Clients
+    /// verteilt.
+    CallbackCreated {
+        /// Der neu angelegte Rückrufauftrag.
+        callback: Callback,
+    },
+
+    /// Ein bestehender Rückrufauftrag wurde geändert (z. B. Zuweisung oder
+    /// Statuswechsel) und wird an alle Clients neu übertragen.
+    CallbackUpdated {
+        /// Der aktualisierte Rückrufauftrag.
+        callback: Callback,
+    },
 }
 
 /// Commands sent from a client to the server.
@@ -187,6 +202,42 @@ pub enum ClientCommand {
 
         /// Zielrufnummer oder SIP-Adresse für die Weiterleitung.
         target: String,
+    },
+
+    /// Neuen Rückrufauftrag anlegen.
+    ///
+    /// Der Server legt den Auftrag in der Datenbank an und verteilt ein
+    /// [`ServerEvent::CallbackCreated`] an alle verbundenen Clients.
+    CreateCallback {
+        /// Rufnummer des Kunden in E.164-Format.
+        #[serde(rename = "phoneNumber")]
+        phone_number: String,
+
+        /// Optionale WERBAS-Kundennummer, falls bereits bekannt.
+        #[serde(rename = "customerId")]
+        customer_id: Option<String>,
+
+        /// Optionale Notiz zum Rückruf (z. B. Gesprächsanlass).
+        note: Option<String>,
+
+        /// Login des Mitarbeiters, dem der Rückruf direkt zugewiesen werden soll.
+        #[serde(rename = "assignedTo")]
+        assigned_to: Option<String>,
+    },
+
+    /// Rückrufauftrag für den eigenen Benutzer beanspruchen (Status → `"claimed"`).
+    ClaimCallback {
+        /// Eindeutige ID des zu beanspruchenden Rückrufauftrags.
+        id: String,
+    },
+
+    /// Rückrufauftrag per CTI-Wählen ausführen.
+    ///
+    /// Der Server löst einen ausgehenden Anruf auf die im Auftrag hinterlegte
+    /// Rufnummer aus und setzt den Status auf `"in_progress"`.
+    DialCallback {
+        /// Eindeutige ID des auszuführenden Rückrufauftrags.
+        id: String,
     },
 }
 
@@ -269,5 +320,104 @@ mod tests {
                 target: "+4989123".into(),
             }
         );
+    }
+
+    #[test]
+    fn create_callback_deserialises_full() {
+        let cmd: ClientCommand = serde_json::from_str(
+            r#"{"type":"createCallback","phoneNumber":"+49301234567","customerId":"C1","note":"Bremsen","assignedTo":null}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            cmd,
+            ClientCommand::CreateCallback {
+                phone_number: "+49301234567".into(),
+                customer_id: Some("C1".into()),
+                note: Some("Bremsen".into()),
+                assigned_to: None,
+            }
+        );
+    }
+
+    #[test]
+    fn create_callback_deserialises_minimal() {
+        // Fehlende optionale Felder werden als None deserialisiert.
+        let cmd: ClientCommand =
+            serde_json::from_str(r#"{"type":"createCallback","phoneNumber":"+4930999"}"#).unwrap();
+        assert_eq!(
+            cmd,
+            ClientCommand::CreateCallback {
+                phone_number: "+4930999".into(),
+                customer_id: None,
+                note: None,
+                assigned_to: None,
+            }
+        );
+    }
+
+    #[test]
+    fn claim_callback_roundtrip() {
+        let cmd = ClientCommand::ClaimCallback { id: "abc".into() };
+        let j = serde_json::to_string(&cmd).unwrap();
+        assert!(j.contains("\"type\":\"claimCallback\""));
+        assert!(j.contains("\"id\":\"abc\""));
+        let back: ClientCommand = serde_json::from_str(&j).unwrap();
+        assert_eq!(cmd, back);
+    }
+
+    #[test]
+    fn dial_callback_roundtrip() {
+        let cmd = ClientCommand::DialCallback { id: "xyz".into() };
+        let j = serde_json::to_string(&cmd).unwrap();
+        assert!(j.contains("\"type\":\"dialCallback\""));
+        assert!(j.contains("\"id\":\"xyz\""));
+        let back: ClientCommand = serde_json::from_str(&j).unwrap();
+        assert_eq!(cmd, back);
+    }
+
+    #[test]
+    fn callback_struct_roundtrip() {
+        use crate::callback::Callback;
+        let cb = Callback {
+            id: "uuid-1".into(),
+            phone_number: "+49301234567".into(),
+            customer_id: Some("KUND-42".into()),
+            note: Some("Bitte zurückrufen".into()),
+            created_by: "MS".into(),
+            assigned_to: Some("FP".into()),
+            status: "open".into(),
+        };
+        let j = serde_json::to_string(&cb).unwrap();
+        // Struct-level camelCase rename_all — keine per-Feld-Annotationen nötig.
+        assert!(j.contains("\"phoneNumber\""));
+        assert!(j.contains("\"customerId\""));
+        assert!(j.contains("\"createdBy\""));
+        assert!(j.contains("\"assignedTo\""));
+        let back: Callback = serde_json::from_str(&j).unwrap();
+        assert_eq!(cb, back);
+    }
+
+    #[test]
+    fn callback_created_serialises() {
+        use crate::callback::Callback;
+        let e = ServerEvent::CallbackCreated {
+            callback: Callback {
+                id: "uuid-2".into(),
+                phone_number: "+49301234567".into(),
+                customer_id: Some("KUND-42".into()),
+                note: None,
+                created_by: "MS".into(),
+                assigned_to: None,
+                status: "open".into(),
+            },
+        };
+        let j = serde_json::to_string(&e).unwrap();
+        assert!(j.contains("\"type\":\"callbackCreated\""));
+        assert!(j.contains("\"phoneNumber\""));
+        assert!(j.contains("\"createdBy\""));
+        assert!(j.contains("\"status\":\"open\""));
+        assert!(j.contains("\"customerId\""));
+        // Fehlende optionale Felder werden nicht serialisiert (serde default).
+        assert!(!j.contains("\"assignedTo\"") || j.contains("\"assignedTo\":null"));
     }
 }

@@ -11,6 +11,7 @@
 pub mod call_event;
 pub mod call_history;
 pub mod call_note;
+pub mod callback;
 pub mod error;
 pub mod phone_link;
 pub mod validation;
@@ -23,6 +24,7 @@ pub use call_event::{
 };
 pub use call_history::{CallDetail, CallLogSummary};
 pub use call_note::{CallNote, NoteCategory};
+pub use callback::Callback;
 pub use error::SharedError;
 pub use phone_link::{ContactPerson, LinkSource, PhoneLink};
 pub use wire::{decode, encode, WireFormat};
